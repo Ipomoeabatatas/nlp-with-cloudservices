@@ -1,9 +1,8 @@
 #!/usr/bin/python
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
-from google.cloud import language
-from google.cloud.language import enums
-from google.cloud.language import types
+from google.cloud import language_v1
+
 import urllib.parse
 
 PORT_NUMBER = 8080
@@ -36,17 +35,16 @@ class myHandler(BaseHTTPRequestHandler):
             </form>''')
 
             text = message
-            document = types.Document(
-                content=text,
-                type=enums.Document.Type.PLAIN_TEXT)
-            sentiment = client.analyze_sentiment(document).document_sentiment
+            document = language_v1.Document(content=text, type_=language_v1.Document.Type.PLAIN_TEXT)            
+            sentiment = client.analyze_sentiment(request={"document": document}).document_sentiment
+
 
             self.wfile.write(message.encode() + b'<br><br>Document Sentiment: '
                              + str(sentiment.score).encode() + b' Magnitude: '
                              + str(sentiment.magnitude).encode())
 
-            entity_sentiment_response = client.analyze_entity_sentiment(
-                    document)
+            encoding_type = language_v1.EncodingType.UTF8
+            entity_sentiment_response = client.analyze_entity_sentiment( request = {'document': document, 'encoding_type': encoding_type})
 
             self.wfile.write(b'<br><br><table border="1 px solid black">' +
                              b'<tr><th>Entity Name</th><th>Type</th>' +
@@ -68,27 +66,17 @@ class myHandler(BaseHTTPRequestHandler):
                     metadata_value = ''
 
                 for mention in entity.mentions:
-                    self.wfile.write(b'<tr><td>' + entity.name.encode() +
-                                     b'</td>')
-                    self.wfile.write(b'<td>' + enums.Entity.Type(entity.type).
-                                     name.encode() + b'</td>')
-                    self.wfile.write(b'<td>' + str(entity.salience).encode() +
-                                     b'</td>')
-                    self.wfile.write(b'<td>' + str(entity.sentiment.score).
-                                     encode() + b'</td>')
-                    self.wfile.write(b'<td>' + str(entity.sentiment.magnitude)
-                                     .encode() + b'</td>')
-                    self.wfile.write(b'<td>' + metadata_name.encode() + b' ' +
-                                     metadata_value.encode() + b'</td>')
-                    self.wfile.write(b'<td>' + mention.text.content.encode() +
-                                     b'</td>')
-                    self.wfile.write(b'<td>' + enums.EntityMention.Type
-                                     (mention.type).name.encode() +
-                                     b'</td></tr>')
+                    self.wfile.write(b'<tr><td>' + entity.name.encode() + b'</td>')
+                    self.wfile.write(b'<td>' + language_v1.Entity.Type(entity.type_).name.encode() + b'</td>')
+                    self.wfile.write(b'<td>' + str(entity.salience).encode() + b'</td>')
+                    self.wfile.write(b'<td>' + str(entity.sentiment.score).encode() + b'</td>')
+                    self.wfile.write(b'<td>' + str(entity.sentiment.magnitude).encode() + b'</td>')
+                    self.wfile.write(b'<td>' + metadata_name.encode() + b' ' + metadata_value.encode() + b'</td>')
+                    self.wfile.write(b'<td>' + mention.text.content.encode() + b'</td>')
+                    self.wfile.write(b'<td>' + language_v1.EntityMention.Type(mention.type_).name.encode() + b'</td></tr>')
 
             self.wfile.write(b'</table>')
-            self.wfile.write(b'<br>Language ' + entity_sentiment_response
-                             .language.encode())
+            self.wfile.write(b'<br>Language ' + entity_sentiment_response.language.encode())
 
         except IOError:
             self.wfile.write("There seems to be some problem! " +
@@ -103,7 +91,7 @@ if __name__ == '__main__':
         server = HTTPServer(('', PORT_NUMBER), myHandler)
         print ('Started httpserver on port ', PORT_NUMBER)
 
-        client = language.LanguageServiceClient()
+        client = language_v1.LanguageServiceClient()
 
         # Wait forever for incoming htto requests
         server.serve_forever()

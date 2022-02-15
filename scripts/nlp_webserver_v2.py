@@ -1,9 +1,10 @@
 #!/usr/bin/python
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
-from google.cloud import language
-from google.cloud.language import enums
-from google.cloud.language import types
+from google.cloud import language_v1
+
+#from google.cloud.language import enums
+#from google.cloud.language import types
 import urllib.parse
 
 PORT_NUMBER = 8080
@@ -29,11 +30,10 @@ class myHandler(BaseHTTPRequestHandler):
                              encode() + b"\n\n")
             self.wfile.write(b"Let analyse the following: " + message.encode())
 
-            text = message
-            document = types.Document(
-                content=text,
-                type=enums.Document.Type.PLAIN_TEXT)
-            sentiment = client.analyze_sentiment(document).document_sentiment
+            text = message.encode()
+          
+            document = language_v1.Document(content=text, type_=language_v1.Document.Type.PLAIN_TEXT)            
+            sentiment = client.analyze_sentiment(request={"document": document}).document_sentiment
 
             self.wfile.write(b'\n\nSentiment: ' + str(sentiment.score).encode()
                              + b' Magnitude: ' + str(sentiment.magnitude).
@@ -52,7 +52,7 @@ if __name__ == '__main__':
         server = HTTPServer(('', PORT_NUMBER), myHandler)
         print ('Started httpserver on port ', PORT_NUMBER)
 
-        client = language.LanguageServiceClient()
+        client = language_v1.LanguageServiceClient()
 
         # Wait forever for incoming htto requests
         server.serve_forever()
