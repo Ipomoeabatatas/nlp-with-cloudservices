@@ -35,17 +35,8 @@ class myHandler(BaseHTTPRequestHandler):
             </form>''')
 
             text = message
-
-            ### TO DO ###
-            ## Set the document object 
-
-            # document = ___TO COMPLETE__
-         
-            
-            ### TO DO ###
-            ## Perform sentiment analyse 
-            
-            # sentiment = ___ TO COMPLETE ___
+            document = language_v1.Document(content=text, type_=language_v1.Document.Type.PLAIN_TEXT)            
+            sentiment = client.analyze_sentiment(request={"document": document}).document_sentiment
 
 
             self.wfile.write(message.encode() + b'<br><br>Document Sentiment: '
@@ -53,11 +44,7 @@ class myHandler(BaseHTTPRequestHandler):
                              + str(sentiment.magnitude).encode())
 
             encoding_type = language_v1.EncodingType.UTF8
-
-            ### TO DO ###
-            ## Perform entity sentiment analyse
-
-            # entity_sentiment_response = ___TO COMPLETE ____
+            entity_sentiment_response = client.analyze_entity_sentiment( request = {'document': document, 'encoding_type': encoding_type})
 
             self.wfile.write(b'<br><br><table border="1 px solid black">' +
                              b'<tr><th>Entity Name</th><th>Type</th>' +

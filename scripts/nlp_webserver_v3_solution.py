@@ -7,6 +7,7 @@ import urllib.parse
 
 PORT_NUMBER = 8080
 
+
 class myHandler(BaseHTTPRequestHandler):
     # Handler for the GET requests
     def do_GET(self):
@@ -26,14 +27,12 @@ class myHandler(BaseHTTPRequestHandler):
             self.wfile.write(b"Date/Time: " +
                              datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
                              .encode() + b"<br>")
-
             self.wfile.write(
                 b"<br>Let's analyse the following text block:<br><br>")
-
-            ## TO DO ##
-            # Insert a HTML form here #
-            # 
-            # 
+            self.wfile.write(b'''<form>
+            <textarea name="message" rows="14" cols="60" wrap="soft">
+            </textarea><br><br>
+            <input type="submit" value="Sentiment Analysis"></form>''')
 
             text = message
             document = language_v1.Document(content=text, type_=language_v1.Document.Type.PLAIN_TEXT)            
